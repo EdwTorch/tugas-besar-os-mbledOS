@@ -118,6 +118,42 @@ struct GDTR _gdt_gdtr = {
     .address  = &global_descriptor_table
 };
 
-void gdt_install(void){
-    // WIP
+void gdt_install_tss(void){
+    uint32_t tss_base = (uint32_t)&_interrupt_tss_entry;
+
+    global_descriptor_table.table[5].base_low = (tss_base & 0xFFFF);
+    global_descriptor_table.table[5].base_mid = (tss_base>>16) & 0xFF;
+    global_descriptor_table.table[5].base_high = (tss_base>>24)&0xFF;
+    global_descriptor_table.table[5].segment_low = sizeof(struct TSSEntry) -1;
+
+    _interrupt_tss_entry.ss0 = 0x10; // Kernel Data Selector (Index 2 -> Offset 0x10)
+    _interrupt_tss_entry.IOmap_base_address = sizeof(struct TSSEntry);
+
+    // 3. Load GDT (Instruksi lgdt)
+    __asm__ __volatile__("lgdt %0" : : "m"(_gdt_gdtr));
+
+    // 4. Flush Segment Registers & Reload CS via Far Jump
+    __asm__ __volatile__(
+        "mov $0x10, %%ax   \n" // Kernel Data Selector
+        "mov %%ax, %%ds    \n"
+        "mov %%ax, %%es    \n"
+        "mov %%ax, %%fs    \n"
+        "mov %%ax, %%gs    \n"
+        "mov %%ax, %%ss    \n"
+        "ljmp $0x08, $1f   \n" // Far Jump ke Kernel Code Selector (0x08)
+        "1:                \n"
+        : 
+        : 
+        : "ax", "memory"
+    );
+
+    // 5. Load Task Register / TSS (Instruksi ltr)
+    // 0x28 adalah TSS Selector (Index 5 * 8)
+    __asm__ __volatile__(
+        "mov $0x28, %%ax   \n"
+        "ltr %%ax          \n"
+        : 
+        : 
+        : "ax"
+    );
 }

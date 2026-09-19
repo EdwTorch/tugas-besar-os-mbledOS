@@ -4,9 +4,12 @@
 #include "header/kernel-entrypoint.h"
 
 void kernel_setup(void) {
+
+    gdt_install_tss();
+    load_gdt(&_gdt_gdtr);
+
     uint32_t a;
     uint32_t volatile b = 0x0000BABE;
     __asm__("mov $0xCAFE0000, %0" : "=r"(a));
-    load_gdt(&_gdt_gdtr);
     while (true) b += 1;
 }
