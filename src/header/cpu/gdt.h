@@ -31,11 +31,19 @@ struct SegmentDescriptor {
     uint16_t base_low;
 
     // Next 16-bit (Bit 32 to 47)
-    uint8_t base_mid;
-    uint8_t type_bit   : 4;
-    uint8_t non_system : 1;
-    // TODO : Continue SegmentDescriptor definition
-
+    uint8_t base_mid; //Base Address 16-23
+    uint8_t type_bit   : 4; //Segment Type : (Code/Data/Read/Write)
+    uint8_t non_system : 1; /* Descriptor Type : 0 = System; 1 = code / data */
+    uint8_t DPL_bit : 2; /*Descriptor Previlege Level dari Level 0-3. Level 0 = Kernel, Level 3 = User */
+    uint8_t segment_present_p_bit : 1; /*Set or Clear. Clear --> Not Valid [0], Set --> Valid/In Memory [1]*/
+    uint8_t limit_bit : 4; 
+    uint8_t avl_bit : 1; /* Available for system usage*/
+    uint8_t l_bit : 1;  /* Mode 32 Bit (0) dan Mode 64 bit (1)*/
+    uint8_t db_bit : 1; /*  Default operation size (0 = 16-bit segment; 1 = 32-bit segment) */
+    uint8_t granularity_bit : 1; /* (0 = Byte, 1 = 4KB page) */
+    
+    uint8_t base_high; //Base Address 24-31
+    // TODO : Continue SegmentDescriptor definition (DONE YEY)
 } __attribute__((packed));
 
 /**
